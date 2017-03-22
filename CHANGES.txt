@@ -1,0 +1,10 @@
+POD
+
+The only changes made to the Apache POI Library is the removal of unnecessary files in order to slim down the size of this abstraction library.
+The files/folders removed are as follows:
+- poi-examples-3.XX.jar
+- poi-excelant.jar
+- poi-scratchpad.jar
+- ./docs/
+
+Licenses and notices for all used programs are included in the root directory of the repository.

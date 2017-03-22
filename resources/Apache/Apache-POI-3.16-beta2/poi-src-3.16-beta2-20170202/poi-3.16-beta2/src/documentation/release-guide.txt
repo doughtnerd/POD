@@ -1,0 +1,265 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+
+             ==============================
+                   POI Release Guide
+             ==============================
+
+
+(I) Prerequisites
+
+   1. You should read the <a href="https://www.apache.org/dev/release.html">Apache Release FAQ</a>
+   2a. You must have shell access to people.apache.org; and you should
+       have key-based authentication set up
+       1. Generate ssh key with ssh-keygen -t rsa -b 4096
+       (e.g. <a href="http://www.linuxproblem.org/art_9.html">how to</a>.)
+       2. Add contents of id_rsa.pub to SSH Key (authorized_keys) line on https://id.apache.org/
+       3. ssh -v username@people.apache.org
+          Verify authenticity of host: https://www.apache.org/dev/machines
+       4. Only sftp access is necessary
+   2b. You must be a member of the committee group
+   3. Release manager must have their public key appended to the KEYS file checked in to SVN and the key published on one of the public key servers.
+      More info can be found here: <a href="https://www.apache.org/dev/release-signing.html">https://www.apache.org/dev/release-signing.html</a>
+   4. You must have both Java JDK 1.6 and Java JDK 1.7+ installed and active.
+   5. You must have the following utilities installed on your local machine and available in your path:
+          * <a href="www.openssh.com">ssh</a>
+          * <a href="www.gnupg.org">gnupg</a>
+          * <a href="www.openssl.org">openssl</a>
+      For Windows users, install Cygwin and make sure you have the above utilities
+   6a. The POI build system requires two components to perform a build
+          * <a href="https://ant.apache.org">Ant</a>
+          * <a href="https://forrest.apache.org/">Forrest</a>.
+      Currently, Forrest needs to be 0.5.x (prefer 0.5.1), Ant 1.8+ should be fine
+      Make sure FORREST_HOME is set.
+
+   6b. To deploy with Maven, you should have the latest stable Maven 2.x.
+        POI 3.10-beta2 was deployed with Maven 2.2.1.
+
+   6c. Ensure you can log in to https://repository.apache.org/ with your Apache
+        credentials, and that you can see the "Staging Repositories" area on
+        the left hand side.
+
+   6d. Ensure your ~/.m2/settings.xml contains a server entry with your
+        Apache credentials in, to be used for uploading. Something like:
+
+{code:xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <servers>
+        <server>
+            <!-- used for uploading to nexus staging repository and svn commit -->
+            <id>apache-id</id>
+            <username>apache-userid</username>
+            <password>apache-passwd</password>
+        </server>
+        <server>
+            <!-- used for signing the releases -->
+            <id>poi-signing</id>
+            <username>keyid (key fingerprint, no spaces)</username>
+            <passphrase>password</passphrase>
+            <privateKey>../.gnupg/secring.gpg</privateKey>
+        </server>
+    </servers>
+</settings>
+{code}
+
+   6e. It's a good idea to check at https://builds.apache.org/view/POI/
+       that Jenkins is in a good state (i.e. most recent build passed
+       and is up to date with SVN). You probably also want to e-mail
+       the dev list with a note to say you're building a release.
+
+   7. Before building, you should run the "rat-check" build task, which
+      uses <a href="https://incubator.apache.org/rat/">Apache Rat</a>
+      to check the source tree for files lacking license headers. Files
+      without headers should be either fixed, or added to the exclude list
+
+   8. Check file permissions are correct in SVN.
+      There can be  files in the SVN tree marked executable (have the
+      svn:executable property set), but which should not be. Checking them
+      out will cause the executable bit to be set for them on filesystems
+      which support it. The flag can be removed in batch using
+
+{code}
+$ svn pd 'svn:executable' $(find -name .svn -prune -or -type f ! -name \*.sh \
+ -print0 | xargs -0 svn pg 'svn:executable' | cut -d ' ' -f 1)
+{code}
+
+   9. Before building, ensure that the year in the NOTICE file is correct,
+      and review any new or updated dependencies to ensure that if they
+      required LICENSE or NOTICE updates then these were done.
+
+  10. Ensure that the changelog is up to date
+
+  11. Ensure that the KEYS files in the dist areas are up-to-date with the
+      latest ones in svn:
+      https://dist.apache.org/repos/dist/dev/poi/KEYS
+      https://dist.apache.org/repos/dist/release/poi/KEYS
+      Dist is a regular svn repo that can be checked out and committed to.
+      To upload to dist: https://www.apache.org/dev/release-distribution
+
+
+(II) Making release artefacts
+  This is mostly automated with a sequence of 3 release-prep ant targets.
+  Run these commands from a clean checkout of https://svn.apache.org/repos/asf/poi/trunk
+
+  1. The following command will update the documentation and create/download the tag (needs a Java7+ environment)
+     using your Apache credentials stored in ~/.m2/settings.xml.
+     {code}
+     ant -Dversion.id=3.15-beta1 release-prep1 (beta release)
+     ant -Dversion.id=3.15 release-prep1 (final release)
+     {code}
+
+  2. Compile the dist (needs a JDK6 environment, sudo update-alternatives --config java)
+     {code}
+     ant release-prep2
+     {code}
+
+  3. Upload to the nexus repo and to the svn release candidate repo  (needs a Java7+ environment)
+     The nexus repo is located at https://repository.apache.org/
+     The release candidate repo is located at https://dist.apache.org/repos/dist/dev/poi/(3.15-beta2-RC1)
+     {code}
+     ant -Dversion.id=3.15-beta2 -Drelease.rc=RC1 release-prep3
+     {code}
+
+  4. Summarise key changes, and any backwards incompatible ones,
+     in the partially auto-generated build/dist/RELEASE-NOTES.txt
+     which needs to be committed separately
+
+  5. validate signatures
+
+Check your signed files
+
+{code}
+find . -name "*.md5" -type f -execdir md5sum -c {} \;
+find . -name "*.sha1" -type f -execdir sha1sum -c {} \;
+find . -name "*.asc" -exec gpg --no-secmem-warning --verify {} \;
+{code}
+
+ (III) Calling the vote:
+
+   1. The release manager should call the vote
+   2. Include the URL of the release artifacts
+   3. Include the time for the vote to run (3 day minimum, can be longer)
+   4. Provide guidance on what needs to be checked
+   5. Complete a tally, and send a result once the time has passed
+
+ (IV) After the vote:
+
+In the release area of the dist repo:
+    https://dist.apache.org/repos/dist/release/poi/release/   (FINAL)
+    https://dist.apache.org/repos/dist/release/poi/dev/       (Alpha/Beta)
+Remove the previous release
+
+Next, svn move the files from the /dist/dev/ area to the appropriate
+/dist/release/ area
+
+FIXME: The release directory structure has changed.
+The commands need to be updated
+example:
+$ svn rm -m "remove the previous release" \
+    https://dist.apache.org/repos/dist/release/poi/dev/src \
+    https://dist.apache.org/repos/dist/release/poi/dev/bin
+
+$ svn mv -m "move staging files to the release area" \
+    https://dist.apache.org/repos/dist/dev/poi/bin \
+    https://dist.apache.org/repos/dist/dev/poi/src/  \
+    https://dist.apache.org/repos/dist/release/poi/dev/
+
+
+Log into https://repository.apache.org/ and go to the "Staging Repositories" area.
+Find the "orgapachepoi" entry, check it has the right content, then Close the repository.
+When that completes, Release it.
+
+2. Wait for the distributions to appear on your favourite mirror
+
+3. Wait for the maven artifacts to appear on Maven Central, and ensure
+   they work:
+
+Create a simple project and make sure the release artifacts are accessible
+by maven:
+
+{code}
+$ mvn archetype:create -DgroupId=org.apache.poi.scratchpad -DartifactId=maven-test
+cd maven-test
+{code}
+
+edit pom.xml and add the release artefacts to the project dependencies:
+
+{code:xml}
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>3.11-beta1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-scratchpad</artifactId>
+      <version>3.11-beta1</version>
+    </dependency>
+{code}
+
+edit src/main/java/Test.java and add this:
+
+{code:java}
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+public class Test {}
+{code}
+
+{code}
+mvn compile
+{code}
+
+You should see [INFO] BUILD SUCCESSFUL in the end, which tells you that
+the jars could be downloaded fine.
+
+4. Edit the website homepage and list the new release there. If a full release,
+   remove older full releases and all beta releases. If a beta release, keep
+   the last full release, and replace any other beta releases
+
+5. Edit the website download page, and list the new release there. This should
+   reference the checksums, so take care when updating
+{code}
+# the following generates a download-snipplet.xml to be copy&pasted in the download.xml
+ant update-download -Dversion.id="3.15-beta2" -Dreltype=dev -Drel_date="02 July 2016" -Dfile_date="20160702"
+{code}
+
+6. Build site using a recent version of Java 1.6 or 1.7 (must be after the fix
+   for TA13-169A).
+   Commit the site changes to svn, and publish live
+
+7. Don't forget to upload the latest version of the site and javadocs
+
+8. Send announcements:
+ - to poi-user and poi-dev lists
+ - to announce@apache.org
+
+Note, announcements should be sent from your @apache.org e-mail address.
+
+9. If this is a final release, in Bugzilla, add a new -FINAL version and the
+   next -dev version. Also close the n-2 -dev version to new bugs.
+
+10. If this is a final release, add it to the DOAP file too
+
+11. Delete directory that held RC.
+
+e.g.
+{code}
+svn delete -m "delete empty RC directory for 3.10-beta2" https://dist.apache.org/repos/dist/dev/poi/3.10-beta2-RC1
+{code}
