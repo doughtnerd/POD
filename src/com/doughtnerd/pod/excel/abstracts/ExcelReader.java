@@ -168,7 +168,7 @@ public abstract class ExcelReader<T> {
 	 * @throws SheetNotFoundException
 	 *             Thrown if the specified sheetIndex returned null.
 	 */
-	public ArrayList<T> processSheet(int sheetIndex, boolean headers){
+	public ArrayList<T> processSheet(int sheetIndex, boolean headers) {
 		Sheet sheet = getSheet(workbook, sheetIndex);
 		return processSheet(sheet, headers);
 	}
@@ -242,7 +242,7 @@ public abstract class ExcelReader<T> {
 	 * @throws SheetNotFoundException
 	 *             Thrown if the specified sheetIndex returned null.
 	 */
-	protected Sheet getSheet(Workbook workbook, int sheetIndex){
+	protected Sheet getSheet(Workbook workbook, int sheetIndex) {
 		Sheet sheet = workbook.getSheetAt(sheetIndex);
 		return sheet;
 	}
