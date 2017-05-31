@@ -93,7 +93,7 @@ Below is an example of one possible method of writing data to a new Excel file.
             	//Do some operation here.
             }
             
-            Workbook newBook = ExcelWriter.writeNewSheetToNewWorkbook("xlsx", "MyNewSheet", null, list);
+            Workbook newBook = ExcelWriter.writeNewSheetToNewWorkbook(ExcelFileType.XSLX, "MyNewSheet", null, list);
             
             ExcelWriter.writeWorkbookToFile(newBook, "C:/users/documents/newFile.xlsx");
         }
@@ -101,7 +101,7 @@ Below is an example of one possible method of writing data to a new Excel file.
     
 In the above code two main things are happening:
 
-1. We are taking our data that we performed operations on and writing it to a new sheet in a new workbook with the ExcelWriter method <code>public static \<T extends ExcelRowObject> Workbook writeNewSheetToNewWorkbook(String workbookType, String sheetName, List<String> headers, List\<T> data)</code>
+1. We are taking our data that we performed operations on and writing it to a new sheet in a new workbook with the ExcelWriter method <code>public static \<T extends ExcelRowObject> Workbook writeNewSheetToNewWorkbook(ExcelFileType workbookType, String sheetName, List<String> headers, List\<T> data)</code>
 2. We then save the Workbook object that is returned by that method to a file using thie <code>public static void writeWorkbookToFile(Workbook workbook, String path)</code>
 
 Take a look at the method header in step 1 above. Well that's interesting isn't it? "What's an ExcelRowObject??", you might ask. "Why can't I just cram some random list of data into the **writeNewSheetToWorkbook** method???
