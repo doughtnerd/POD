@@ -34,6 +34,12 @@ import com.doughtnerd.pod.excel.enums.ExcelFileType;
 public final class ExcelWriter {
 
 	/**
+	 * The default sheet name used in various sheet-generating methods if no
+	 * valid sheet name is provided.
+	 */
+	public static final String DEFAULT_SHEETNAME = "Sheet1";
+
+	/**
 	 * Writes the given data to the given workbook on a sheet named after the
 	 * given sheetName using the given headers.
 	 * 
@@ -179,6 +185,9 @@ public final class ExcelWriter {
 	 * This method writes a List of ExcelObjects to a new Sheet in a new
 	 * Workbook then returns the workbook to the user.
 	 * 
+	 * @deprecated Instead, use
+	 *             {@link #writeNewSheetToNewWorkbook(ExcelFileType, String, List, List)}
+	 * 
 	 * @param <T>
 	 *            The type of data being written to the sheet. Must extend
 	 *            ExcelRowObject.
@@ -186,7 +195,7 @@ public final class ExcelWriter {
 	 *            Either xlsx or xls. If null or empty, defaults to xlsx.
 	 * @param sheetName
 	 *            The name the sheet should have in the new workbook. If null or
-	 *            empty, defaults to Sheet1.
+	 *            empty, defaults to DEFAULT_SHEETNAME.
 	 * @param headers
 	 *            List of String headers that that the sheet should use. If null
 	 *            or empty, no headers are written to the sheet.
@@ -201,7 +210,46 @@ public final class ExcelWriter {
 			throw new IllegalArgumentException("There was no data.");
 		}
 		if (sheetName == null || sheetName.equals("")) {
-			sheetName = "Sheet1";
+			sheetName = DEFAULT_SHEETNAME;
+		}
+		Workbook workbook = getNewWorkbook(workbookType);
+		Sheet sheet = workbook.createSheet(sheetName);
+		int startRow = 0;
+		if (headers != null && headers.size() != 0) {
+			writeHeaders(headers, sheet, startRow++);
+		}
+		writeData(workbook, data, sheet, startRow);
+		return workbook;
+	}
+
+	/**
+	 * This method writes a List of ExcelObjects to a new Sheet in a new
+	 * Workbook then returns the workbook to the user.
+	 * 
+	 * @param <T>
+	 *            The type of data being written to the sheet. Must extend
+	 *            ExcelRowObject.
+	 * @param workbookType
+	 *            A valid ExcelFileType enum value. If none is supplied,
+	 *            defaults to XLSX.
+	 * @param sheetName
+	 *            The name the sheet should have in the new workbook. If null or
+	 *            empty, defaults to DEFAULT_SHEETNAME.
+	 * @param headers
+	 *            List of String headers that that the sheet should use. If null
+	 *            or empty, no headers are written to the sheet.
+	 * @param data
+	 *            List of Objects which extend ExcelObject that will be written
+	 *            as rows to the sheet.
+	 * @return The workbook the data was written to.
+	 */
+	public static <T extends ExcelRowObject> Workbook writeNewSheetToNewWorkbook(ExcelFileType workbookType,
+			String sheetName, List<String> headers, List<T> data) {
+		if (data == null || data.size() == 0) {
+			throw new IllegalArgumentException("There was no data");
+		}
+		if (sheetName == null || sheetName.equals("")) {
+			sheetName = DEFAULT_SHEETNAME;
 		}
 		Workbook workbook = getNewWorkbook(workbookType);
 		Sheet sheet = workbook.createSheet(sheetName);
