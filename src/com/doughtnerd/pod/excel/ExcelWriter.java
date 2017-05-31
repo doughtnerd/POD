@@ -22,6 +22,7 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.doughtnerd.pod.excel.abstracts.ExcelRowObject;
+import com.doughtnerd.pod.excel.enums.ExcelFileType;
 
 /**
  * This class provides static methods to handle writing operations of excel
@@ -248,8 +249,7 @@ public final class ExcelWriter {
 		for (T key : data) {
 			Row row = sheet.createRow(startRow++);
 			ExcelCellObject[] objArr = key.toCellObjectArray();
-			Objects.requireNonNull(objArr,
-					"ExcelRowObject.toCellObjectArray() cannot result in a null object");
+			Objects.requireNonNull(objArr, "ExcelRowObject.toCellObjectArray() cannot result in a null object");
 			int cellnum = 0;
 			for (ExcelCellObject obj : objArr) {
 				Cell cell = row.createCell(cellnum++);
@@ -382,6 +382,8 @@ public final class ExcelWriter {
 	 * Creates a new HSSFWorkbook (xls), XSSFWorkbook (xlsx), or SXSSFWorkbook
 	 * (streamable xlsx) depending on the type passed to this method.
 	 * 
+	 * @deprecated Instead, use {@link #getNewWorkbook(ExcelFileType)}
+	 * 
 	 * @param type
 	 *            The type of workbook to create. If type is null, empty, or
 	 *            type does not equal xls, xlsx, or streamable-xlsx (shortened
@@ -395,6 +397,25 @@ public final class ExcelWriter {
 		Workbook workbook = type.equals("xls") ? new HSSFWorkbook()
 				: type.equals("xlsx") ? new XSSFWorkbook() : type.equals("sxlsx") ? new SXSSFWorkbook() : null;
 		return workbook;
+	}
+
+	/**
+	 * Creates a new HSSFWorkbook (xls), XSSFWorkbook (xlsx), or SXSSFWorkbook
+	 * (streamable xlsx) depending on the type passed to this method.
+	 * 
+	 * @param type
+	 *            The type of workbook to create. Defaults to xlsx.
+	 * @return The new xls, xlsx, or streamable-xlsx type workbook.
+	 */
+	public static Workbook getNewWorkbook(ExcelFileType type) {
+		switch (type) {
+		case XLS:
+			return new HSSFWorkbook();
+		case SXLSX:
+			return new SXSSFWorkbook();
+		default:
+			return new XSSFWorkbook();
+		}
 	}
 
 	/**
