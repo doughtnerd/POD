@@ -12,7 +12,7 @@ import com.doughtnerd.pod.excel.abstracts.ExcelReader;
 
 /**
  * This class is an alternate implementation of ExcelReader that allows for a
- * configuration file to be read in for use in the extractItem method.
+ * configuration file to be read in for configuring the reader.
  * 
  * @author Christopher Carlson
  *
@@ -36,7 +36,7 @@ public abstract class ConfiguredExcelReader<T> {
 	 * Creates a new ConfiguredExcelReader object.
 	 * 
 	 * @param configFile
-	 *            The file used to configure this reader's extraction process.
+	 *            The file used to configure this reader.
 	 * @param dataFile
 	 *            The data file this reader will operate on.
 	 */
@@ -48,6 +48,7 @@ public abstract class ConfiguredExcelReader<T> {
 			input = new FileInputStream(configFile);
 			prop.load(input);
 			props = prop;
+			configureReader(this.props);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -60,6 +61,16 @@ public abstract class ConfiguredExcelReader<T> {
 			}
 		}
 	}
+
+	/**
+	 * Called by the constructor to initialize any variables the reader might
+	 * contain or need to use before the extraction process begins.
+	 * 
+	 * @param properties
+	 *            The properties read in from the configuration file upon
+	 *            construction of this reader.
+	 */
+	public abstract void configureReader(Properties properties);
 
 	/**
 	 * How this reader will extract data from a given row in the excel document.
@@ -79,7 +90,7 @@ public abstract class ConfiguredExcelReader<T> {
 		return reader;
 	}
 
-	private class DataReader extends ExcelReader<T> {
+	public class DataReader extends ExcelReader<T> {
 
 		public DataReader(File file) throws IOException {
 			super(file);
